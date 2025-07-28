@@ -8,5 +8,5 @@ In Galactic Trader, you are the captain of the starship "Starhawk." Your goal is
 
 ### Live Version
 
-[Play Galactic Trader Live!](https://sergutsu.github.io/SpaceTrader/)
+SOON
 
