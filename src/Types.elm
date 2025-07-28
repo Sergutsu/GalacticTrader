@@ -35,3 +35,4 @@ type Msg
     | TravelTo String
     | Tick Time.Posix
     | SetCurrentTime Time.Posix
+    | SelectShip Int

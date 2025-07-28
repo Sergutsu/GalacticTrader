@@ -3,14 +3,13 @@ module Main exposing (..)
 import Browser
 import Dict
 import Html exposing (Html, div, hr, p, text)
-import View.Market exposing (viewMarket)
-import View.Navigation exposing (viewNavigation)
 import View.Ownership exposing (viewOwnership)
+import View.ControlPanel
 import Logic.Event as Event
 import Logic.Game as Game
 import Models.Planet exposing (Planet)
 import Models.Player exposing (Player)
-import Models.Ship exposing (Ship)
+import Models.Ship exposing (Ship, ShipType(..))
 import Time
 import Types exposing (Model, Msg(..))
 
@@ -51,7 +50,29 @@ initialPlayer = { name = "Captain Sergut", credits = 1000 }
 
 
 initialShips : List Ship
-initialShips = [{ name = "Stardust Cruiser", cargo = Dict.fromList [("Food", 5)], cargoCapacity = 10, fuel = 100, fuelCapacity = 100 }]
+initialShips =
+    [ { name = "Stardust Cruiser"
+      , shipType = Cargo
+      , cargoCapacity = 10
+      , cargo = Dict.fromList [("Food", 5)]
+      , fuel = 100
+      , fuelCapacity = 100
+      }
+    , { name = "Star Explorer"
+      , shipType = Explorer
+      , cargoCapacity = 5
+      , cargo = Dict.empty
+      , fuel = 80
+      , fuelCapacity = 80
+      }
+    , { name = "Defender"
+      , shipType = Military
+      , cargoCapacity = 8
+      , cargo = Dict.empty
+      , fuel = 120
+      , fuelCapacity = 120
+      }
+    ]
 
 initialPlanets : List Planet
 initialPlanets = 
@@ -83,6 +104,9 @@ update msg model =
         TravelTo destinationName ->
             Game.handleTravel destinationName model
 
+        SelectShip idx ->
+            ( { model | activeShipIndex = idx }, Cmd.none )
+
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
@@ -99,12 +123,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     let
-        currentPlanet =
-            model.currentLocation
-                |> Maybe.andThen
-                    (\locationName ->
-                        List.head (List.filter (\p -> p.name == locationName) model.planets)
-                    )
+
 
         activeShip =
             List.head (List.drop model.activeShipIndex model.ships)
@@ -115,26 +134,24 @@ view model =
         , hr [] []
         , case activeShip of
             Just ship ->
-                div []
-                    [ p [] [ text ("Active Ship: " ++ ship.name) ]
-                    , p [] [ text ("Fuel: " ++ String.fromInt ship.fuel ++ "/" ++ String.fromInt ship.fuelCapacity) ]
-                    ]
-
+                View.ControlPanel.viewControlPanel
+                    { activeShip = ship
+                    , currentLocation = model.currentLocation
+                    , planets = model.planets
+                    , onTravel = TravelTo
+                    , onBuy = BuyCommodity
+                    , onSell = SellCommodity
+                    }
             Nothing ->
                 div [] [ text "No active ship." ]
         , hr [] []
-        , case currentPlanet of
-            Just planet ->
-                div []
-                    [ p [] [ text ("Location: " ++ planet.name) ]
-                    , viewMarket BuyCommodity SellCommodity planet
-                    ]
-
-            Nothing ->
-                div [] [ text "Lost in space." ]
-        , hr [] []
-        , viewOwnership model.ships
-        , hr [] []
-        , viewNavigation TravelTo model.currentLocation model.planets
+        , viewOwnership model.activeShipIndex SelectShip model.ships
         ]
 
+
+shipTypeToString : ShipType -> String
+shipTypeToString shipType =
+    case shipType of
+        Cargo -> "Cargo"
+        Explorer -> "Explorer"
+        Military -> "Military"
