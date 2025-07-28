@@ -1,8 +1,12 @@
-module Types exposing (Model, Msg(..), TravelState)
+module Types exposing (Model, Msg(..), TravelState, Asset(..))
 
-import Models.Planet exposing (Planet)
+
+import Models.StarSystem
 import Models.Player exposing (Player)
 import Models.Ship exposing (Ship)
+import Models.Artifact exposing (Artifact)
+import Models.Station exposing (Station)
+-- Add more as needed
 import Time
 
 
@@ -11,17 +15,25 @@ type alias Model =
     {
         player : Player
         , ships : List Ship
-        , planets : List Planet
-        , activeShipIndex : Int
-        , currentLocation : Maybe String
+        , assets : List Asset
+        , activeAssetIndex : Int
+        , starSystems : List Models.StarSystem.StarSystem
+        , activeShipIndex : Int -- legacy, will be removed
+        , currentLocation : Maybe (String, String) -- (systemName, planetName)
         , travelState : Maybe TravelState
         , currentTime : Time.Posix
     }
 
+type Asset
+    = ShipAsset Ship
+    | ArtifactAsset Artifact
+    | StationAsset Station
+    -- Add more as needed
+
 
 type alias TravelState =
     {
-        destination : String
+        destination : (String, String) -- (systemName, planetName)
         , arrivalTime : Time.Posix
         , travelDuration : Float
     }
@@ -36,3 +48,4 @@ type Msg
     | Tick Time.Posix
     | SetCurrentTime Time.Posix
     | SelectShip Int
+    | SelectAsset Int

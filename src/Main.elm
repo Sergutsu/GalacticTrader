@@ -2,16 +2,18 @@ module Main exposing (..)
 
 import Browser
 import Dict
-import Html exposing (Html, div, hr, p, text)
+import Html exposing (Html, div, hr, p, text, button)
+import Html.Events exposing (onClick)
 import View.Ownership exposing (viewOwnership)
 import View.ControlPanel
 import Logic.Event as Event
 import Logic.Game as Game
-import Models.Planet exposing (Planet)
+
 import Models.Player exposing (Player)
 import Models.Ship exposing (Ship, ShipType(..))
+import Models.StarSystem exposing (StarSystem)
 import Time
-import Types exposing (Model, Msg(..))
+import Types exposing (Model, Msg(..), Asset(..))
 
 
 
@@ -37,9 +39,11 @@ initialModel =
     {
         player = initialPlayer
         , ships = initialShips
-        , planets = initialPlanets
-        , activeShipIndex = 0
-        , currentLocation = Just "Earth"
+        , assets = List.map ShipAsset initialShips
+        , activeAssetIndex = 0
+        , starSystems = initialStarSystems
+        , activeShipIndex = 0 -- legacy
+        , currentLocation = Just ("Sol", "Earth")
         , travelState = Nothing
         , currentTime = Time.millisToPosix 0
     }
@@ -74,11 +78,20 @@ initialShips =
       }
     ]
 
-initialPlanets : List Planet
-initialPlanets = 
-    [ { name = "Earth", market = Dict.fromList [("Food", { price = 10, stock = 100 }), ("Water", { price = 5, stock = 200 })] }
-    , { name = "Mars", market = Dict.fromList [("Ore", { price = 50, stock = 50 }), ("Robots", { price = 150, stock = 10 })] }
-    , { name = "Jupiter", market = Dict.fromList [("Gas", { price = 20, stock = 1000 })] }
+initialStarSystems : List StarSystem
+initialStarSystems =
+    [ { name = "Sol"
+      , planets =
+            [ { name = "Earth", market = Dict.fromList [("Food", { price = 10, stock = 100 }), ("Water", { price = 5, stock = 200 })] }
+            , { name = "Mars", market = Dict.fromList [("Ore", { price = 50, stock = 50 }), ("Robots", { price = 150, stock = 10 })] }
+            , { name = "Jupiter", market = Dict.fromList [("Gas", { price = 20, stock = 1000 })] }
+            ]
+      , explored = True
+      }
+    , { name = "Alpha Centauri"
+      , planets = [ { name = "Proxima b", market = Dict.empty } ]
+      , explored = False
+      }
     ]
 
 
@@ -88,6 +101,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        SelectAsset idx ->
+            ( { model | activeAssetIndex = idx }, Cmd.none )
 
         SetCurrentTime newTime ->
             ( { model | currentTime = newTime }, Cmd.none )
@@ -122,30 +138,18 @@ subscriptions model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-    let
-
-
-        activeShip =
-            List.head (List.drop model.activeShipIndex model.ships)
-    in
     div []
-        [ p [] [ text ("Player: " ++ model.player.name) ]
-        , p [] [ text ("Credits: " ++ String.fromInt model.player.credits) ]
+        [ div [] [ text "Galactic Trader" ]
         , hr [] []
-        , case activeShip of
-            Just ship ->
-                View.ControlPanel.viewControlPanel
-                    { activeShip = ship
-                    , currentLocation = model.currentLocation
-                    , planets = model.planets
-                    , onTravel = TravelTo
-                    , onBuy = BuyCommodity
-                    , onSell = SellCommodity
-                    }
-            Nothing ->
-                div [] [ text "No active ship." ]
+        , div []
+            [ p [] [ text ("Player: " ++ model.player.name) ]
+            , p [] [ text ("Credits: " ++ String.fromInt model.player.credits) ]
+            ]
         , hr [] []
-        , viewOwnership model.activeShipIndex SelectShip model.ships
+        , viewAssetSelector model.assets model.activeAssetIndex
+        , hr [] []
+        , viewCurrentAssetPanel model.assets model.activeAssetIndex model.starSystems model.currentLocation
+        , hr [] []
         ]
 
 
@@ -155,3 +159,45 @@ shipTypeToString shipType =
         Cargo -> "Cargo"
         Explorer -> "Explorer"
         Military -> "Military"
+
+
+viewAssetSelector : List Asset -> Int -> Html Msg
+viewAssetSelector assets activeIdx =
+    div []
+        (List.indexedMap
+            (\i asset ->
+                let
+                    (name, isActive) =
+                        case asset of
+                            ShipAsset ship -> (ship.name, i == activeIdx)
+                            ArtifactAsset _ -> ("Artifact", i == activeIdx)
+                            StationAsset _ -> ("Station", i == activeIdx)
+                in
+                div []
+                    [ button [ Html.Events.onClick (SelectAsset i) ] [ text name ]
+                    , if isActive then text " A" else text ""
+                    ]
+            )
+            assets
+        )
+
+viewCurrentAssetPanel : List Asset -> Int -> List StarSystem -> Maybe (String, String) -> Html Msg
+viewCurrentAssetPanel assets activeIdx starSystems currentLocation =
+    case List.drop activeIdx assets |> List.head of
+        Just asset ->
+            case asset of
+                ShipAsset ship ->
+                    -- Show the real ship control panel
+                    View.ControlPanel.viewControlPanel
+                        { activeShip = ship
+                        , starSystems = starSystems
+                        , currentLocation = currentLocation
+                        , onTravel = TravelTo
+                        , onBuy = BuyCommodity
+                        , onSell = SellCommodity
+                        }
+                ArtifactAsset _ ->
+                    div [] [ text "Artifact control panel (empty)" ]
+                StationAsset _ ->
+                    div [] [ text "Station control panel (empty)" ]
+        Nothing -> text "No asset selected"

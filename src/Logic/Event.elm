@@ -10,10 +10,8 @@ handleTick newTime model =
         Just travel ->
             if Time.posixToMillis newTime >= Time.posixToMillis travel.arrivalTime then
                 { model | travelState = Nothing, currentLocation = Just travel.destination, currentTime = newTime }
-
             else
                 { model | currentTime = newTime }
-
         Nothing ->
             model
 
