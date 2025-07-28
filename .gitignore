@@ -1,0 +1,15 @@
+# Elm
+elm-stuff/
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+index.html
+
+# Editor directories and files
+.idea
+.kiro
+.vscode
+*.swp
+*~
