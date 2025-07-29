@@ -7,7 +7,7 @@ import Types exposing (TravelState)
 
 
 startTravel : String -> List Ship -> Int -> List Planet -> Time.Posix -> Maybe ( List Ship, TravelState )
-startTravel destinationName ships activeShipIndex _ currentTime =
+startTravel destinationName ships activeShipIndex planets currentTime =
     let
         activeShip =
             List.head (List.drop activeShipIndex ships)
@@ -26,8 +26,13 @@ startTravel destinationName ships activeShipIndex _ currentTime =
                         updatedShips =
                             List.indexedMap (\i s -> if i == activeShipIndex then newShip else s) ships
 
+                        -- For now, we'll use the current system and the destination name as the planet
+                        -- In a real implementation, you'd want to look up the actual system and planet
+                        currentSystem = Maybe.map (\(systemName, _) -> systemName) (List.head (List.map (\p -> ("", p.name)) planets))
+                                    |> Maybe.withDefault "Unknown System"
+                                    
                         travelState =
-                            { destination = destinationName
+                            { destination = (currentSystem, destinationName)
                             , arrivalTime = Time.millisToPosix (Time.posixToMillis currentTime + round travelDuration)
                             , travelDuration = travelDuration
                             }

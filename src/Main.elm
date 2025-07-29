@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Dict
 import Html exposing (Html, div, hr, p, text, button)
+import Html.Attributes
 import Html.Events exposing (onClick)
 import View.Ownership exposing (viewOwnership)
 import View.ControlPanel
@@ -46,6 +47,7 @@ initialModel =
         , currentLocation = Just ("Sol", "Earth")
         , travelState = Nothing
         , currentTime = Time.millisToPosix 0
+        , messages = ["Welcome to Galactic Trader!", "Docked at Earth in the Sol system."]
     }
 
 
@@ -150,7 +152,20 @@ view model =
         , hr [] []
         , viewCurrentAssetPanel model.assets model.activeAssetIndex model.starSystems model.currentLocation
         , hr [] []
+        , viewMessageLog model.messages
         ]
+
+
+viewMessageLog : List String -> Html msg
+viewMessageLog messages =
+    div 
+        [ Html.Attributes.style "max-height" "150px"
+        , Html.Attributes.style "overflow-y" "auto"
+        , Html.Attributes.style "border" "1px solid #ccc"
+        , Html.Attributes.style "padding" "8px"
+        , Html.Attributes.style "margin-top" "16px"
+        ]
+        (List.map (\msg -> div [] [ text msg ]) (List.reverse messages))
 
 
 shipTypeToString : ShipType -> String

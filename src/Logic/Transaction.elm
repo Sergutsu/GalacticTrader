@@ -1,89 +1,120 @@
-module Logic.Transaction exposing (buyCommodity, sellCommodity)
+module Logic.Transaction exposing (buyGood, sellGood, TransactionError(..))
 
-import Dict
+import Dict exposing (Dict)
 import Logic.Ship as ShipLogic
+import Models.Good exposing (Good)
 import Models.Planet exposing (Planet)
 import Models.Player exposing (Player)
 import Models.Ship exposing (Ship)
 
 
-buyCommodity : String -> List Ship -> Int -> Player -> Planet -> ( List Ship, Player, Planet )
-buyCommodity commodityName ships activeShipIndex player planet =
-    let
-        activeShipResult =
-            List.head (List.drop activeShipIndex ships)
+type TransactionError
+    = NotEnoughCredits
+    | NotEnoughStock
+    | NotEnoughCargoSpace
+    | ItemNotInCargo
+    | ItemNotInMarket
+    | InvalidShip
 
-        marketItemResult =
-            Dict.get commodityName planet.market
-    in
-    case ( activeShipResult, marketItemResult ) of
-        ( Just ship, Just item ) ->
-            if player.credits >= item.price && item.stock > 0 then
-                case ShipLogic.addCargo commodityName 1 ship of
-                    Just newShip ->
-                        let
-                            newPlayer =
-                                { player | credits = player.credits - item.price }
 
-                            updatedShips =
-                                List.indexedMap (\i s -> if i == activeShipIndex then newShip else s) ships
+type alias TransactionResult =
+    { success : Bool
+    , error : Maybe TransactionError
+    , updatedShips : List Ship
+    , updatedPlayer : Player
+    , updatedPlanet : Planet
+    }
 
-                            newMarket =
-                                Dict.update commodityName
-                                    (\maybeItem ->
-                                        Maybe.map (\i -> { i | stock = i.stock - 1 }) maybeItem
-                                    )
-                                    planet.market
 
-                            newPlanet =
-                                { planet | market = newMarket }
-                        in
-                        ( updatedShips, newPlayer, newPlanet )
-
-                    Nothing ->
-                        ( ships, player, planet )
-
+buyGood : String -> List Ship -> Int -> Player -> Planet -> TransactionResult
+buyGood goodName ships activeShipIndex player planet =
+    case ( getActiveShip activeShipIndex ships, Dict.get goodName planet.market ) of
+        ( Just ship, Just marketGood ) ->
+            if player.credits < marketGood.price then
+                transactionError NotEnoughCredits ships player planet
+                
+            else if marketGood.stock <= 0 then
+                transactionError NotEnoughStock ships player planet
+                
             else
-                ( ships, player, planet )
+                case ShipLogic.addCargo goodName 1 ship of
+                    Just updatedShip ->
+                        let
+                            updatedShips = updateShips activeShipIndex updatedShip ships
+                            updatedPlayer = { player | credits = player.credits - marketGood.price }
+                            updatedMarket = updateMarketStock goodName -1 planet.market
+                            updatedPlanet = { planet | market = updatedMarket }
+                        in
+                        transactionSuccess updatedShips updatedPlayer updatedPlanet
+                            
+                    Nothing ->
+                        transactionError NotEnoughCargoSpace ships player planet
+                        
+        ( Nothing, _ ) ->
+            transactionError InvalidShip ships player planet
+            
+        ( _, Nothing ) ->
+            transactionError ItemNotInMarket ships player planet
 
-        _ ->
-            ( ships, player, planet )
 
-
-sellCommodity : String -> List Ship -> Int -> Player -> Planet -> ( List Ship, Player, Planet )
-sellCommodity commodityName ships activeShipIndex player planet =
-    let
-        activeShipResult =
-            List.head (List.drop activeShipIndex ships)
-
-        marketItemResult =
-            Dict.get commodityName planet.market
-    in
-    case ( activeShipResult, marketItemResult ) of
-        ( Just ship, Just item ) ->
-            case ShipLogic.removeCargo commodityName 1 ship of
-                Just newShip ->
+sellGood : String -> List Ship -> Int -> Player -> Planet -> TransactionResult
+sellGood goodName ships activeShipIndex player planet =
+    case ( getActiveShip activeShipIndex ships, Dict.get goodName planet.market ) of
+        ( Just ship, Just marketGood ) ->
+            case ShipLogic.removeCargo goodName 1 ship of
+                Just updatedShip ->
                     let
-                        newPlayer =
-                            { player | credits = player.credits + item.price }
-
-                        updatedShips =
-                            List.indexedMap (\i s -> if i == activeShipIndex then newShip else s) ships
-
-                        newMarket =
-                            Dict.update commodityName
-                                (\maybeItem ->
-                                    Maybe.map (\i -> { i | stock = i.stock + 1 }) maybeItem
-                                )
-                                planet.market
-
-                        newPlanet =
-                            { planet | market = newMarket }
+                        updatedShips = updateShips activeShipIndex updatedShip ships
+                        updatedPlayer = { player | credits = player.credits + marketGood.price }
+                        updatedMarket = updateMarketStock goodName 1 planet.market
+                        updatedPlanet = { planet | market = updatedMarket }
                     in
-                    ( updatedShips, newPlayer, newPlanet )
-
+                    transactionSuccess updatedShips updatedPlayer updatedPlanet
+                    
                 Nothing ->
-                    ( ships, player, planet )
+                    transactionError ItemNotInCargo ships player planet
+                    
+        ( Nothing, _ ) ->
+            transactionError InvalidShip ships player planet
+            
+        ( _, Nothing ) ->
+            transactionError ItemNotInMarket ships player planet
 
-        _ ->
-            ( ships, player, planet )
+
+-- Helper functions
+
+getActiveShip : Int -> List Ship -> Maybe Ship
+getActiveShip activeShipIndex ships =
+    List.head (List.drop activeShipIndex ships)
+
+
+updateShips : Int -> Ship -> List Ship -> List Ship
+updateShips index updatedShip ships =
+    List.indexedMap (\i s -> if i == index then updatedShip else s) ships
+
+
+updateMarketStock : String -> Int -> Dict String Good -> Dict String Good
+updateMarketStock goodName delta market =
+    Dict.update goodName
+        (Maybe.map (\good -> { good | stock = good.stock + delta }))
+        market
+
+
+transactionSuccess : List Ship -> Player -> Planet -> TransactionResult
+transactionSuccess ships player planet =
+    { success = True
+    , error = Nothing
+    , updatedShips = ships
+    , updatedPlayer = player
+    , updatedPlanet = planet
+    }
+
+
+transactionError : TransactionError -> List Ship -> Player -> Planet -> TransactionResult
+transactionError error ships player planet =
+    { success = False
+    , error = Just error
+    , updatedShips = ships
+    , updatedPlayer = player
+    , updatedPlanet = planet
+    }

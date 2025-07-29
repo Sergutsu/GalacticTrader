@@ -22,6 +22,7 @@ type alias Model =
         , currentLocation : Maybe (String, String) -- (systemName, planetName)
         , travelState : Maybe TravelState
         , currentTime : Time.Posix
+        , messages : List String -- Game messages to display to the player
     }
 
 type Asset
