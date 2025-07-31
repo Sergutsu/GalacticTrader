@@ -1,0 +1,152 @@
+/* Market Panel Styles */
+.market-panel {
+    background-color: #1a1a2e;
+    border: 1px solid #2d4263;
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: #e6e6e6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.panel-title {
+    color: #4cc9f0;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.location {
+    color: #a8d5e2;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
+/* Market Table Styles */
+.market-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.market-table th {
+    background-color: #16213e;
+    color: #4cc9f0;
+    padding: 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.market-table td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #2d4263;
+    vertical-align: middle;
+}
+
+.market-table tr:last-child td {
+    border-bottom: none;
+}
+
+.market-table tr:hover {
+    background-color: rgba(45, 66, 99, 0.3);
+}
+
+/* Item and Price Styles */
+.item-name {
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Button Styles */
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-buy {
+    background-color: #4cc9f0;
+    color: #0d1b2a;
+}
+
+.btn-buy:hover {
+    background-color: #38b6db;
+    transform: translateY(-1px);
+}
+
+.btn-buy:disabled {
+    background-color: #4a5d7e;
+    color: #7a8fb3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-sell {
+    background-color: #f72585;
+    color: #ffffff;
+}
+
+.btn-sell:hover {
+    background-color: #d91a6e;
+    transform: translateY(-1px);
+}
+
+/* No Items Message */
+.no-items {
+    text-align: center;
+    color: #a8d5e2;
+    font-style: italic;
+    padding: 2rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .market-panel {
+        padding: 1rem;
+    }
+    
+    .panel-title {
+        font-size: 1.5rem;
+    }
+    
+    .market-table th, 
+    .market-table td {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+}

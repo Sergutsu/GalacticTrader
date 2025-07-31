@@ -13,6 +13,7 @@ import Logic.Game as Game
 import Models.Player exposing (Player)
 import Models.Ship exposing (Ship, ShipType(..))
 import Models.StarSystem exposing (StarSystem)
+import Types.Ownership exposing (Owner(..))
 import Time
 import Types exposing (Model, Msg(..), Asset(..))
 
@@ -52,31 +53,50 @@ initialModel =
 
 
 initialPlayer : Player
-initialPlayer = { name = "Captain Sergut", credits = 1000 }
+initialPlayer =
+    { id = "player1"
+    , name = "Captain Sergut"
+    , credits = 1000
+    , factionId = Nothing
+    , ownedAssets = ["ship1", "ship2", "ship3"]
+    , permissions = []
+    }
 
 
 initialShips : List Ship
 initialShips =
-    [ { name = "Stardust Cruiser"
+    [ { id = "ship1"
+      , name = "Stardust Cruiser"
       , shipType = Cargo
       , cargoCapacity = 10
       , cargo = Dict.fromList [("Food", 5)]
       , fuel = 100
       , fuelCapacity = 100
+      , owner = Just (PlayerOwner "player1")
+      , isDocked = True
+      , location = Just ("Sol", "Earth")
       }
-    , { name = "Star Explorer"
+    , { id = "ship2"
+      , name = "Star Explorer"
       , shipType = Explorer
       , cargoCapacity = 5
       , cargo = Dict.empty
       , fuel = 80
       , fuelCapacity = 80
+      , owner = Just (PlayerOwner "player1")
+      , isDocked = False
+      , location = Just ("Sol", "Mars")
       }
-    , { name = "Defender"
+    , { id = "ship3"
+      , name = "Defender"
       , shipType = Military
       , cargoCapacity = 8
       , cargo = Dict.empty
       , fuel = 120
       , fuelCapacity = 120
+      , owner = Just (PlayerOwner "player1")
+      , isDocked = False
+      , location = Just ("Sol", "Jupiter")
       }
     ]
 
@@ -84,14 +104,35 @@ initialStarSystems : List StarSystem
 initialStarSystems =
     [ { name = "Sol"
       , planets =
-            [ { name = "Earth", market = Dict.fromList [("Food", { price = 10, stock = 100 }), ("Water", { price = 5, stock = 200 })] }
-            , { name = "Mars", market = Dict.fromList [("Ore", { price = 50, stock = 50 }), ("Robots", { price = 150, stock = 10 })] }
-            , { name = "Jupiter", market = Dict.fromList [("Gas", { price = 20, stock = 1000 })] }
+            [ { name = "Earth"
+              , market = 
+                    Dict.fromList 
+                        [ ("Food", { price = 10, stock = 100, baseStock = 100 })
+                        , ("Water", { price = 5, stock = 200, baseStock = 200 })
+                        ]
+              }
+            , { name = "Mars"
+              , market = 
+                    Dict.fromList 
+                        [ ("Ore", { price = 50, stock = 50, baseStock = 50 })
+                        , ("Robots", { price = 150, stock = 10, baseStock = 10 })
+                        ]
+              }
+            , { name = "Jupiter"
+              , market = 
+                    Dict.fromList 
+                        [ ("Gas", { price = 20, stock = 1000, baseStock = 1000 })
+                        ]
+              }
             ]
       , explored = True
       }
     , { name = "Alpha Centauri"
-      , planets = [ { name = "Proxima b", market = Dict.empty } ]
+      , planets =
+            [ { name = "Proxima b"
+              , market = Dict.empty
+              }
+            ]
       , explored = False
       }
     ]

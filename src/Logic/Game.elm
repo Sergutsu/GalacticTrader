@@ -9,8 +9,8 @@ import Types exposing (Model, Msg(..), Asset(..))
 
 getCurrentPlanet : Model -> Maybe Planet
 getCurrentPlanet model =
-    case model.currentLocation of
-        Just (systemName, planetName) ->
+    model.currentLocation
+        |> Maybe.andThen (\(systemName, planetName) ->
             model.starSystems
                 |> List.filter (\sys -> sys.name == systemName)
                 |> List.head
@@ -19,8 +19,7 @@ getCurrentPlanet model =
                         |> List.filter (\p -> p.name == planetName)
                         |> List.head
                 )
-        Nothing ->
-            Nothing
+        )
 
 
 handleBuy : String -> Model -> ( Model, Cmd Msg )
@@ -28,7 +27,7 @@ handleBuy goodName model =
     case getCurrentPlanet model of
         Just planet ->
             let
-                result = Transaction.buyGood goodName model.ships model.activeShipIndex model.player planet
+                result = Transaction.buyGood goodName 1 model.ships model.activeShipIndex model.player planet
                 
                 -- Update star systems if the transaction was successful
                 updatedStarSystems =
@@ -57,6 +56,11 @@ handleBuy goodName model =
                             Just ItemNotInCargo -> "You don't have any " ++ goodName ++ " to sell"
                             Just ItemNotInMarket -> goodName ++ " is not available in this market"
                             Just InvalidShip -> "No valid ship selected"
+                            Just InvalidQuantity -> "Invalid quantity for " ++ goodName
+                            Just TradeOfferExpired -> "Trade offer expired"
+                            Just TradeOfferNotFound -> "Trade offer not found"
+                            Just TradeOfferInvalid -> "Invalid trade offer"
+                            Just TradeWithSelf -> "Cannot trade with yourself"
                             Nothing -> "Unknown error occurred"
                     else
                         "Bought 1 " ++ goodName
@@ -85,7 +89,7 @@ handleSell goodName model =
     case getCurrentPlanet model of
         Just planet ->
             let
-                result = Transaction.sellGood goodName model.ships model.activeShipIndex model.player planet
+                result = Transaction.sellGood goodName 1 model.ships model.activeShipIndex model.player planet
                 
                 -- Update star systems if the transaction was successful
                 updatedStarSystems =
@@ -114,6 +118,11 @@ handleSell goodName model =
                             Just NotEnoughCredits -> "Not enough credits"
                             Just NotEnoughStock -> "Not enough stock"
                             Just NotEnoughCargoSpace -> "Not enough cargo space"
+                            Just InvalidQuantity -> "Invalid quantity for " ++ goodName
+                            Just TradeOfferExpired -> "Trade offer expired"
+                            Just TradeOfferNotFound -> "Trade offer not found"
+                            Just TradeOfferInvalid -> "Invalid trade offer"
+                            Just TradeWithSelf -> "Cannot trade with yourself"
                             Nothing -> "Unknown error occurred"
                     else
                         "Sold 1 " ++ goodName

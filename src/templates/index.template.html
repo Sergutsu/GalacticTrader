@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic Trader</title>
+    <link rel="stylesheet" href="/css/market.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1b2a;
+            color: #e6e6e6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #2d4263;
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 1.5rem;
+        }
+        
+        .sidebar {
+            background-color: #1a1a2e;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .messages {
+            background-color: #1a1a2e;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-left: 3px solid #4cc9f0;
+            background-color: rgba(45, 66, 99, 0.3);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Galactic Trader</h1>
+        </header>
+        
+        <div class="game-container">
+            <aside class="sidebar">
+                <div id="control-panel"></div>
+                <div id="inventory"></div>
+            </aside>
+            
+            <main class="main-content">
+                <div id="market"></div>
+                <div class="messages" id="messages">
+                    <div class="message">Welcome to Galactic Trader!</div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/elm.js"></script>
+    <script>
+        const app = Elm.Main.init({
+            node: document.getElementById('market')
+        });
+        
+        // Handle incoming messages from Elm
+        app.ports.messageReceiver?.subscribe(function(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = message;
+            messagesDiv.insertBefore(messageElement, messagesDiv.firstChild);
+            
+            // Limit the number of messages to show
+            while (messagesDiv.children.length > 20) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+            }
+        });
+    </script>
+</body>
+</html>
