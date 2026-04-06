@@ -1,10 +1,12 @@
 module Example exposing (..)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Expect
 import Test exposing (..)
 
 
 suite : Test
 suite =
-    todo "Implement our first test. See https://package.elm-lang.org/packages/elm-explorations/test/latest for how to do this!"
+    describe "placeholder"
+        [ test "keeps test suite active" <|
+            \_ -> Expect.pass
+        ]

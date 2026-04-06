@@ -7,7 +7,9 @@ import List.Extra as List
 
 addCargo : String -> Int -> Ship -> Maybe Ship
 addCargo commodityName quantity ship =
-    if Dict.size ship.cargo >= ship.cargoCapacity && not (Dict.member commodityName ship.cargo) then
+    if quantity <= 0 then
+        Nothing
+    else if getAvailableCargoSpace ship < quantity then
         Nothing
 
     else
@@ -72,6 +74,9 @@ getCargoTotal goodName ships =
 -}
 transferCargoBetweenShips : String -> Int -> Ship -> Ship -> Maybe { fromShip : Ship, toShip : Ship }
 transferCargoBetweenShips goodName quantity fromShip toShip =
+    if quantity <= 0 then
+        Nothing
+    else
     -- First, check if the source ship has enough cargo
     let
         availableQuantity =
@@ -84,12 +89,7 @@ transferCargoBetweenShips goodName quantity fromShip toShip =
         -- Check if the destination ship has enough space
         let
             spaceNeeded =
-                -- If the ship already has some of this cargo, we only need space for the additional quantity
-                case Dict.get goodName toShip.cargo of
-                    Just existingQty ->
-                        max 0 (quantity - existingQty)
-                    Nothing ->
-                        quantity
+                quantity
         in
         if getAvailableCargoSpace toShip < spaceNeeded then
             -- Not enough space in the destination ship
